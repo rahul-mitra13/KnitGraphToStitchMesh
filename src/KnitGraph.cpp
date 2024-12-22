@@ -289,7 +289,7 @@ void KnitGraph::traceFaces(){
         dualVertexPositions(f.getIndex(), 1) = avgPosition[1];
         dualVertexPositions(f.getIndex(), 2) = avgPosition[2];
     }
-    polyscope::registerPointCloud("dual vertex positions", dualVertexPositions);
+    //polyscope::registerPointCloud("dual vertex positions", dualVertexPositions);
 
     
     std::vector<std::vector<size_t>> dualFaces;
@@ -339,22 +339,28 @@ void KnitGraph::traceFaces(){
 
     ManifoldSurfaceMesh * dualMesh = new ManifoldSurfaceMesh(dualFaces);
     VertexPositionGeometry * dualGeometry = new VertexPositionGeometry(*dualMesh, dualVertexPositions);
-    polyscope::registerSurfaceMesh("dual mesh", dualVertexPositions, dualFaces);
 
-    
+    //std::vector<int> handled(dualMesh -> nEdges(), 0);
     // for (Face f : dualMesh->faces()){
     //     int i = 0;
     //     std::cout << "for dual face " << f.getIndex() << std::endl;
     //     for (Halfedge he : f.adjacentHalfedges()){
-    //         std::cout << "edge between " << he.tailVertex().getIndex() << " and " << he.tipVertex().getIndex() << " is " << edgeLabels[f.getIndex()][i++] << std::endl;
+    //         //std::cout << "edge between " << he.tailVertex().getIndex() << " and " << he.tipVertex().getIndex() << " is " << edgeLabels[f.getIndex()][i++] << std::endl;
+    //         if ((edgeLabels[f.getIndex()][i++] != 1) && (handled[he.edge().getIndex()] == 0)){//this is a course edge
+    //             //half it so that Kui can split wales 
+    //             scaleEdgeLength(he.edge(), 1.0, dualGeometry);
+    //             handled[he.edge().getIndex()] = 1;
+
+    //         }
     //     }
     //     std::cout << "----------------------------" << std::endl;
     // }
 
     // std::cout << "number of faces in the dual mesh " << dualMesh -> nFaces() << std::endl;
     // std::cout << "size of edge labels = " << edgeLabels.size() << std::endl;
+    polyscope::registerSurfaceMesh("dual mesh after adjustment", dualGeometry->inputVertexPositions, dualMesh->getFaceVertexList());
 
-    std::ofstream outfile("sititMesh.obj");
+    std::ofstream outfile("stitchMesh.obj");
     for (const auto &v : dualMesh->vertices()){
         Vector3 p = dualGeometry->vertexPositions[v];
         outfile << "v " << p.x << " " << p.y << " " << p.z << std::endl;
