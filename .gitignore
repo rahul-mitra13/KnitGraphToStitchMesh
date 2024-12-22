@@ -2,6 +2,7 @@
 build/
 build_debug/
 deps/
+data/
 
 
 # Editor and OS things
