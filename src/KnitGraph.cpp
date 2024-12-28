@@ -100,16 +100,6 @@ void KnitGraph::renderGraph(){
     graphReal -> setRadius(0.001);
     graphReal -> setEnabled(true);
 
-    for (int i = 0; i < edges.size(); i++){
-        for (int j = 0; j < edges.size(); j++){
-            if (j == i) continue;
-            if (edges[i][0] == edges[j][0] && edges[i][1] == edges[j][1]){
-                std::cout << "duplicate edges " << std::endl;
-                exit(1);
-            }
-        }
-    }
-
     // for (const auto &he : halfedges){
     //     std::cout << "tail: " << he->tail << std::endl;
     //     std::cout << "tip: " << he->tip << std::endl;
