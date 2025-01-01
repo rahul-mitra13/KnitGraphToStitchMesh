@@ -13,24 +13,6 @@ void KnitGraph::renderGraph(){
             e.v1 = v.id;
             e.v2 = v.row_out;
             e.isCourse = true;
-            // if ((v.col_in[0] == -1 && v.col_in[1] == -1) || (v.col_out[0] == -1 && v.col_out[1] == -1)){//this is a boundary halfedge, make the twin the boundary
-            //     //original halfedge
-            //     KnitGraphHalfedge* he1 = new KnitGraphHalfedge();
-            //     he1->tail = v.id;
-            //     he1->tip = v.row_out;
-            //     he1->isRowOut = true;
-            //     //twin halfedge
-            //     KnitGraphHalfedge* he2 = new KnitGraphHalfedge();
-            //     he2->tail = v.row_out;
-            //     he2->tip = v.id;
-            //     he2->isRowIn = true;
-            //     he2->isBoundary = true;
-            //     he1->twin = he2;
-            //     he2->twin = he1;
-            //     halfedges.push_back(he1);
-            //     halfedges.push_back(he2);
-            //     e.isBoundary = true;
-            // }
             //original halfedge
             KnitGraphHalfedge* he1 = new KnitGraphHalfedge();
             he1->tail = v.id;
@@ -100,23 +82,16 @@ void KnitGraph::renderGraph(){
     graphReal -> setRadius(0.001);
     graphReal -> setEnabled(true);
 
-    // for (const auto &he : halfedges){
-    //     std::cout << "tail: " << he->tail << std::endl;
-    //     std::cout << "tip: " << he->tip << std::endl;
-    //     if (he->isRowOut) std::cout << "Row out " << std::endl;
-    //     if (he->isRowIn) std::cout << "Row in " << std::endl;
-    //     if (he->isWaleOut) std::cout << "Wale out " << std::endl;
-    //     if (he->isWaleIn) std::cout << "Wale in " << std::endl;
-    //     if (he->isBoundary) std::cout << "boundary " << std::endl;
-    //     std::cout << "twin tail " << he->twin->tail << std::endl;
-    //     std::cout << "twin tip " << he->twin->tip << std::endl;
-    //     if (he->twin->isRowOut) std::cout << "Twin Row out " << std::endl;
-    //     if (he->twin->isRowIn) std::cout << "Twin Row in " << std::endl;
-    //     if (he->twin->isWaleOut) std::cout << "Twin Wale out " << std::endl;
-    //     if (he->twin->isWaleIn) std::cout << "Twin Wale in " << std::endl;
-    //     if (he->twin->isBoundary) std::cout << "Twin boundary " << std::endl;
-    //     std::cout << "-------------------" << std::endl;
-    // }
+    for (int i = 0; i < edges.size(); i++){
+        for (int j = 0; j < edges.size(); j++){
+            if (i == j) continue;
+            if (edges[i][0] == edges[j][0] && edges[i][1] == edges[j][1]){
+                std::cout << "duplicate edges " << std::endl;
+                exit(1);
+            }
+        }
+    }
+
 
 }
 
@@ -147,6 +122,7 @@ void KnitGraph::traceFaces(){
         currHe -> isVisited = true;
         int startVertex = currHe->tail;
         do{
+            std::cout << "looping through edges in a face " << std::endl;
             currFace.push_back(currHe->tail);
             if (currHe -> isRowOut){
                 if (vertices[currHe->tip].col_in[0] != -1){//we're not at the bottom most row
