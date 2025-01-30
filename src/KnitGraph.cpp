@@ -1,4 +1,5 @@
 #include "KnitGraph.h"
+#include <fstream>
 
 //render the graph
 void KnitGraph::renderGraph(){
@@ -78,6 +79,7 @@ void KnitGraph::renderGraph(){
             halfedges.push_back(he2);
         }
     }
+
     auto graphReal = polyscope::registerCurveNetwork("knit graph", embeddedVertices, edges);
     graphReal -> setRadius(0.001);
     graphReal -> setEnabled(true);
@@ -344,6 +346,36 @@ void KnitGraph::traceFaces(){
             outfile << l << " ";
         }
         outfile << "\n";
+    } 
+
+    outfile.close(); 
+
+
+    //print out percentage errors for histograms
+    // double period = 0.25;
+    // primalGeometry->requireEdgeLengths();
+    // std::ofstream error("errors.csv");
+    // for (Edge e : primalMesh->edges()){
+    //     double percentError = ((primalGeometry->edgeLengths[e] - period)/period) * 100.;
+    //     error << percentError << "\n";
+    // }
+}
+
+
+//for saving your graph as a line element obj
+void KnitGraph::writeLineElementObj(){
+
+    std::ofstream outfile("lineElement.obj");
+    for (auto &v : vertices){
+        outfile << " v " << v.position.x << " " << v.position.y << " " << v.position.z << std::endl;
     }
-    
+
+    for (auto &v : vertices){
+        if (v.row_out != -1) outfile << "l " << v.id + 1 << " " << v.row_out + 1 << std::endl;
+        if (v.col_out[0] != -1) outfile << "l " << v.id + 1  << " " << v.col_out[0] + 1 << std::endl;
+        if (v.col_out[1] != -1) outfile << "l " << v.id + 1 << " " << v.col_out[1] + 1 << std::endl;
+    }
+
+    outfile.close();
+
 }

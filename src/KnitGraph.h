@@ -68,4 +68,7 @@ struct KnitGraph{
 
     void traceFaces();
 
+    //for saving your graph as a line element obj
+    void writeLineElementObj();
+
 };
