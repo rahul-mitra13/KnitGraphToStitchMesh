@@ -9,7 +9,6 @@
 
 #include "args/args.hxx"
 #include "KnitGraph.h"
-#include "StitchMesh.h"
 #include "imgui.h"
 
 #include <iostream>
@@ -83,7 +82,7 @@ int main(int argc, char **argv) {
 
   graph.traceFaces();
 
-  graph.writeLineElementObj();
+  //graph.writeLineElementObj();
 
   //for rendering figures
   //has to go before the show() call
