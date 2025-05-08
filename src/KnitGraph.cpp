@@ -124,7 +124,6 @@ void KnitGraph::traceFaces(){
         currHe -> isVisited = true;
         int startVertex = currHe->tail;
         do{
-            std::cout << "looping through edges in a face " << std::endl;
             currFace.push_back(currHe->tail);
             if (currHe -> isRowOut){
                 if (vertices[currHe->tip].col_in[0] != -1){//we're not at the bottom most row
@@ -308,25 +307,9 @@ void KnitGraph::traceFaces(){
     ManifoldSurfaceMesh * dualMesh = new ManifoldSurfaceMesh(dualFaces);
     VertexPositionGeometry * dualGeometry = new VertexPositionGeometry(*dualMesh, dualVertexPositions);
 
-    //std::vector<int> handled(dualMesh -> nEdges(), 0);
-    // for (Face f : dualMesh->faces()){
-    //     int i = 0;
-    //     std::cout << "for dual face " << f.getIndex() << std::endl;
-    //     for (Halfedge he : f.adjacentHalfedges()){
-    //         //std::cout << "edge between " << he.tailVertex().getIndex() << " and " << he.tipVertex().getIndex() << " is " << edgeLabels[f.getIndex()][i++] << std::endl;
-    //         if ((edgeLabels[f.getIndex()][i++] != 1) && (handled[he.edge().getIndex()] == 0)){//this is a course edge
-    //             //half it so that Kui can split wales 
-    //             scaleEdgeLength(he.edge(), 1.0, dualGeometry);
-    //             handled[he.edge().getIndex()] = 1;
-
-    //         }
-    //     }
-    //     std::cout << "----------------------------" << std::endl;
-    // }
-
     // std::cout << "number of faces in the dual mesh " << dualMesh -> nFaces() << std::endl;
     // std::cout << "size of edge labels = " << edgeLabels.size() << std::endl;
-    polyscope::registerSurfaceMesh("dual mesh after adjustment", dualGeometry->inputVertexPositions, dualMesh->getFaceVertexList());
+    polyscope::registerSurfaceMesh("dual mesh", dualGeometry->inputVertexPositions, dualMesh->getFaceVertexList());
 
     std::ofstream outfile("stitchMesh.obj");
     for (const auto &v : dualMesh->vertices()){
@@ -350,15 +333,6 @@ void KnitGraph::traceFaces(){
 
     outfile.close(); 
 
-
-    //print out percentage errors for histograms
-    // double period = 0.25;
-    // primalGeometry->requireEdgeLengths();
-    // std::ofstream error("errors.csv");
-    // for (Edge e : primalMesh->edges()){
-    //     double percentError = ((primalGeometry->edgeLengths[e] - period)/period) * 100.;
-    //     error << percentError << "\n";
-    // }
 }
 
 
