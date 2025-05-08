@@ -76,7 +76,6 @@ int main(int argc, char **argv) {
     graph.vertices.push_back(v);
   }
 
-  //graph.reOrderVertices();
 
   graph.renderGraph();
 
