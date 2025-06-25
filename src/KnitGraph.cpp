@@ -84,15 +84,23 @@ void KnitGraph::renderGraph(){
     graphReal -> setRadius(0.001);
     graphReal -> setEnabled(true);
 
+    std::vector<Vector3> dups;
+    int numDuplicate = 0;
     for (int i = 0; i < edges.size(); i++){
         for (int j = 0; j < edges.size(); j++){
             if (i == j) continue;
             if (edges[i][0] == edges[j][0] && edges[i][1] == edges[j][1]){
+                dups.push_back(embeddedVertices[edges[i][0]]);
                 std::cout << "duplicate edges " << std::endl;
-                exit(1);
+                numDuplicate++;
+                //exit(1);
             }
         }
     }
+
+    polyscope::registerPointCloud("duplicates", dups);
+
+    std::cout << "Number of duplicate edges " << numDuplicate << std::endl;
 
 
 }
@@ -333,6 +341,29 @@ void KnitGraph::traceFaces(){
 
     outfile.close(); 
 
+}
+
+//trace the short rows in the graph 
+void KnitGraph::traceShortRows(){   
+
+    int ctr = 0;
+    for (auto &v : vertices){
+        if (v.row_in == -1){
+            std::vector<Vector3> pos;
+            std::vector<std::array<int, 2>> edges;
+            auto walker = v;
+            while(walker.row_out != -1){
+                pos.push_back(walker.position);
+                walker = vertices[walker.row_out];
+            }
+            for (int i = 0; i < (int)pos.size() - 1; i++){
+                edges.push_back(std::array<int, 2>{i, i + 1});
+            }
+            if (pos.size() > 1000) return;
+            polyscope::registerCurveNetwork("traced short row " + std::to_string(ctr), pos, edges)->setRadius(0.00125);
+            ctr++;
+        }
+    }
 }
 
 

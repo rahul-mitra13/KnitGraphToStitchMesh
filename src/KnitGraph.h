@@ -10,10 +10,10 @@
 #include "polyscope/curve_network.h"
 #include "polyscope/point_cloud.h"
 
+#include <vector> 
+#include <optional>
 #include <iostream>
 #include <fstream>
-#include <vector> 
-#include <algorithm>
 
 
 using namespace geometrycentral;
@@ -67,6 +67,8 @@ struct KnitGraph{
     void renderGraph();
 
     void traceFaces();
+
+    void traceShortRows();
 
     //for saving your graph as a line element obj
     void writeLineElementObj();
