@@ -360,7 +360,7 @@ void KnitGraph::traceShortRows(){
                 edges.push_back(std::array<int, 2>{i, i + 1});
             }
             if (pos.size() > 1000) return;
-            polyscope::registerCurveNetwork("traced short row " + std::to_string(ctr), pos, edges)->setRadius(0.00125);
+            polyscope::registerCurveNetwork("traced short row " + std::to_string(ctr), pos, edges)->setRadius(0.003);
             ctr++;
         }
     }
