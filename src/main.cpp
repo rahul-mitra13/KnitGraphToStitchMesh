@@ -41,15 +41,6 @@ void rotateObjects() {
   );
 }
 
-void callBacks() {
-
-  if (ImGui::Button("Rotate Objects")){
-    rotateObjects();
-  }
-
-}
-
-
 int main(int argc, char **argv) {
 
   // // Initialize polyscope
