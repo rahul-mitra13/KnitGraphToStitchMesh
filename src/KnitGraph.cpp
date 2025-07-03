@@ -88,15 +88,25 @@ void KnitGraph::renderGraph(){
     int numDuplicate = 0;
     for (int i = 0; i < edges.size(); i++){
         for (int j = 0; j < edges.size(); j++){
-            if (i == j) continue;
+            std::cout << "edge = (" << 
             if (edges[i][0] == edges[j][0] && edges[i][1] == edges[j][1]){
                 dups.push_back(embeddedVertices[edges[i][0]]);
+                dups.push_back(embeddedVertices[edges[i][1]]);
                 std::cout << "duplicate edges " << std::endl;
+                std::cout << "duplicate edge between " << edges[i][0] << " and " << edges[i][1] << std::endl;
                 numDuplicate++;
                 //exit(1);
             }
         }
     }
+
+    std::cout << "For vertex 6677 " << std::endl;
+    std::cout << "row in = " << vertices[6677].row_in << std::endl;
+    std::cout << "row out = " << vertices[6677].row_out << std::endl;
+
+    std::cout << "For vertex 1357 " << std::endl;
+    std::cout << "row in = " << vertices[1357].row_in << std::endl;
+    std::cout << "row out = " << vertices[1357].row_out << std::endl;
 
     polyscope::registerPointCloud("duplicates", dups);
 
