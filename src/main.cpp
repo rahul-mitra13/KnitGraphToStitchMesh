@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
   // polyscope::view::setViewFromJson(viewerString, false);
 
   // Set the callback
-  polyscope::state::userCallback = rotateObjects;
+  //polyscope::state::userCallback = rotateObjects;
 
   // Give control to the polyscope gui
   polyscope::show();
