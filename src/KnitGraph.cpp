@@ -88,7 +88,7 @@ void KnitGraph::renderGraph(){
     int numDuplicate = 0;
     for (int i = 0; i < edges.size(); i++){
         for (int j = 0; j < edges.size(); j++){
-            std::cout << "edge = (" << 
+            if (i == j) continue;
             if (edges[i][0] == edges[j][0] && edges[i][1] == edges[j][1]){
                 dups.push_back(embeddedVertices[edges[i][0]]);
                 dups.push_back(embeddedVertices[edges[i][1]]);
