@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
 
   graph.renderGraph();
 
-  //graph.traceFaces();
+  graph.traceFaces();
 
   graph.traceShortRows();
 
