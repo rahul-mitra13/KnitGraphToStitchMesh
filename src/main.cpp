@@ -56,11 +56,11 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  std::string meshName = argv[2];
-  std::unique_ptr<ManifoldSurfaceMesh> mesh;
-  std::unique_ptr<VertexPositionGeometry> geometry;
-  std::tie(mesh, geometry) = readManifoldSurfaceMesh(meshName);
-  auto psMesh = polyscope::registerSurfaceMesh(polyscope::guessNiceNameFromPath(meshName), geometry->inputVertexPositions, mesh -> getFaceVertexList());
+  // std::string meshName = argv[2];
+  // std::unique_ptr<ManifoldSurfaceMesh> mesh;
+  // std::unique_ptr<VertexPositionGeometry> geometry;
+  // std::tie(mesh, geometry) = readManifoldSurfaceMesh(meshName);
+  // auto psMesh = polyscope::registerSurfaceMesh(polyscope::guessNiceNameFromPath(meshName), geometry->inputVertexPositions, mesh -> getFaceVertexList());
 
   std::vector<std::vector<double>> matrix; // To store the matrix
   std::string line;
