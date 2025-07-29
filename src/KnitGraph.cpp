@@ -100,19 +100,6 @@ void KnitGraph::renderGraph(){
         }
     }
 
-    std::cout << "For vertex 6677 " << std::endl;
-    std::cout << "row in = " << vertices[6677].row_in << std::endl;
-    std::cout << "row out = " << vertices[6677].row_out << std::endl;
-
-    std::cout << "For vertex 1357 " << std::endl;
-    std::cout << "row in = " << vertices[1357].row_in << std::endl;
-    std::cout << "row out = " << vertices[1357].row_out << std::endl;
-
-    polyscope::registerPointCloud("duplicates", dups);
-
-    std::cout << "Number of duplicate edges " << numDuplicate << std::endl;
-
-
 }
 
 void KnitGraph::traceFaces(){
