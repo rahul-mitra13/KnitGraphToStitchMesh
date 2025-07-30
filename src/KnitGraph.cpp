@@ -234,8 +234,11 @@ void KnitGraph::traceFaces(){
         primalVertexPositions(v.id, 2) = v.position[2];
     }
 
-    ManifoldSurfaceMesh * primalMesh = new ManifoldSurfaceMesh(faces);
+    std::cout << "Got here 1 " << std::endl;
+    SurfaceMesh * primalMesh = new SurfaceMesh(faces);
     VertexPositionGeometry * primalGeometry = new VertexPositionGeometry(*primalMesh, primalVertexPositions);
+    std::cout << "Got here 2 " << std::endl;
+    
     // std::cout << "Number of faces in the primal mesh = " << primalMesh->nFaces() << std::endl;
     // std::cout << "Number of vertices in the primal mesh = " << primalMesh->nVertices() << std::endl;
     // std::cout << "Number of edges in the primal mesh = " << primalMesh->nEdges() << std::endl;
@@ -309,8 +312,10 @@ void KnitGraph::traceFaces(){
         }
     }
 
-    ManifoldSurfaceMesh * dualMesh = new ManifoldSurfaceMesh(dualFaces);
+    std::cout << "Got here 3 " << std::endl;
+    SurfaceMesh * dualMesh = new SurfaceMesh(dualFaces);
     VertexPositionGeometry * dualGeometry = new VertexPositionGeometry(*dualMesh, dualVertexPositions);
+    std::cout << "Got here 4 " << std::endl;
 
     // std::cout << "number of faces in the dual mesh " << dualMesh -> nFaces() << std::endl;
     // std::cout << "size of edge labels = " << edgeLabels.size() << std::endl;

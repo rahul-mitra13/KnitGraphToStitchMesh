@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 
   graph.traceFaces();
 
-  graph.traceShortRows();
+  //graph.traceShortRows();
 
   graph.writeLineElementObj();
 
