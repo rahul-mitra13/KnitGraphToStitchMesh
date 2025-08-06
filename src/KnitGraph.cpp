@@ -247,7 +247,19 @@ void KnitGraph::traceFaces(){
     // std::cout << "Is primalMesh edge manifold? = " << primalMesh -> isEdgeManifold() << std::endl;
     // //can't be oriented if it's not manifold
     // std::cout << "Is primalMesh oriented? = " << primalMesh -> isOriented() << std::endl;
-    auto psMesh = polyscope::registerSurfaceMesh("primal mesh", primalVertexPositions, faces);
+    auto primalPSMesh = polyscope::registerSurfaceMesh("primal mesh", primalVertexPositions, faces);
+    FaceData<int> primalMeshFaceLabels(*primalMesh, 0);
+
+    for (Face f : primalMesh -> faces()){
+        int ctr = 0;
+        for (Halfedge he : f.adjacentHalfedges()){
+            ctr++;
+        }
+        if (ctr == 5) primalMeshFaceLabels[f] = -1.0;
+        else if (ctr == 3) primalMeshFaceLabels[f] = 1.0;
+    }
+    primalPSMesh->addFaceScalarQuantity("face labels", primalMeshFaceLabels);
+
     
     
     //std::vector<Vector3> dualVertexPositions;
