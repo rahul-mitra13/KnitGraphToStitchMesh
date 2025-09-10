@@ -96,12 +96,11 @@ int main(int argc, char **argv) {
     graph.vertices.push_back(v);
   }
 
-
   graph.renderGraph();
 
   graph.traceFaces();
 
-  //graph.traceShortRows();
+  graph.traceShortRows();
 
   graph.writeLineElementObj();
 
