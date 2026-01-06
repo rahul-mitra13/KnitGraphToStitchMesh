@@ -28,7 +28,6 @@ void KnitGraph::renderGraph(){
             he2->twin = he1;
             halfedges.push_back(he1);
             halfedges.push_back(he2);
-            e.isBoundary = true;
             embeddedEdges.push_back(e);
         }
         if (v.col_out[0] != -1){
@@ -111,11 +110,6 @@ void KnitGraph::traceFaces(){
     std::map<std::pair<int, int>, KnitGraphHalfedge*> vPair2He;
     for (const auto& he : halfedges){
         vPair2He[std::make_pair(he->tail, he->tip)] = he;
-    }
-
-    //now set all the boundary halfedges to visited 
-    for (const auto& he : halfedges){
-        if (he->isBoundary) he->isVisited = true;
     }
 
     //now trace the faces 
