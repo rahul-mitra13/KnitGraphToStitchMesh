@@ -121,8 +121,7 @@ void KnitGraph::traceFaces(){
     //now trace the faces 
     for (auto &he : halfedges){
         if (he->isVisited) continue;//skip halfedges we've already visited
-        if (he -> isBoundary) continue;//skip boundary halfedges
-    
+        
         //need to come up with a way to trace bottom coure, wale, top course, wale
         std::vector<size_t> currFace;
         KnitGraphHalfedge * currHe = he;
