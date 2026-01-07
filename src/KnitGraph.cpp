@@ -115,7 +115,6 @@ void KnitGraph::traceFaces(){
     //now trace the faces 
     for (auto &he : halfedges){
         if (he->isVisited) continue;//skip halfedges we've already visited
-        
         //need to come up with a way to trace bottom coure, wale, top course, wale
         std::vector<size_t> currFace;
         KnitGraphHalfedge * currHe = he;
@@ -179,7 +178,6 @@ void KnitGraph::traceFaces(){
                     //hit a short row, take the next wale in 
                     currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_in[0])];
                     currHe -> isVisited = true;
-                    //std::cout << currHe->tail << " ";
                     if (currHe -> tail == startVertex) break;
                     else{
                         continue;
@@ -219,6 +217,90 @@ void KnitGraph::traceFaces(){
         if (currFace.size() > 1)
             faces.push_back(currFace);
     }
+
+    //now trace the faces 
+    // for (auto &he : halfedges){
+    //     if (he->isVisited) continue;//skip halfedges we've already visited
+    //     //need to come up with a way to trace bottom coure, wale, top course, wale
+    //     std::vector<size_t> currFace;
+    //     KnitGraphHalfedge * currHe = he;
+    //     currHe -> isVisited = true;
+    //     int startVertex = currHe->tail;
+    //     std::cout << "start vertex = " << startVertex << std::endl;
+    //     do{
+    //         std::cout << "curr vertex = " << currHe->tail << std::endl;
+    //         currFace.push_back(currHe->tail);
+    //         if (currFace.size() > 5){
+    //             std::cout << "Traced " << faces.size() << " faces " << std::endl;
+    //             std::cout << "Something went wrong on this face " << std::endl;
+    //             exit(1);
+    //         }
+    //         if (currHe -> isRowOut){
+    //             if (vertices[currHe->tip].col_out[0] != -1){//we're not at the top most row
+    //                 //go to the next wale out
+    //                 currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_out[0])];
+    //                 currHe -> isVisited = true;
+    //                 if (currHe -> tail == startVertex) break;
+    //                 else{
+    //                     continue;
+    //                 }
+    //             }
+    //         }
+    //         if (currHe -> isRowIn){
+    //             if (vertices[currHe->tip].col_in[0] != -1){//we're not at the bottom most row
+    //                 //go to the next wale in
+    //                 currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_in[0])];
+    //                 currHe -> isVisited = true;
+    //                 if (currHe -> tail == startVertex) break;
+    //                 else{
+    //                     continue;
+    //                 }
+    //             }     
+    //         }
+    //         if (currHe -> isWaleIn){
+    //             if (vertices[currHe->tip].row_out != -1){//we're not at a short row 
+    //                 //go to the next row out
+    //                 currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].row_out)];
+    //                 currHe -> isVisited = true;
+    //                 if (currHe -> tail == startVertex) break;
+    //                 else{
+    //                     continue;
+    //                 }
+    //             }
+    //             else{
+    //                 //hit a short row, take the next wale in 
+    //                 currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_in[0])];
+    //                 currHe -> isVisited = true;
+    //                 if (currHe -> tail == startVertex) break;
+    //                 else{
+    //                     continue;
+    //                 }
+    //             }
+    //         }
+    //         if (currHe -> isWaleOut){
+    //             if (vertices[currHe->tip].row_in != -1){//we're not at a short row
+    //                 //go to the next row in
+    //                 currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].row_in)];
+    //                 currHe -> isVisited = true;
+    //                 if (currHe -> tail == startVertex) break;
+    //                 else{
+    //                     continue;
+    //                 }
+    //             }
+    //             else{
+    //                 //hit a short row, take the next wale out 
+    //                 currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_out[0])];
+    //                 currHe -> isVisited = true;
+    //                 if (currHe -> tail == startVertex) break;
+    //                 else{
+    //                     continue;
+    //                 }
+    //             }
+    //         }
+    //     }while(currHe -> tail != startVertex);
+    //     if (currFace.size() > 1)
+    //         faces.push_back(currFace);
+    // }
     
     Eigen::MatrixXd primalVertexPositions(vertices.size(), 3);
     for (const auto& v : vertices){
