@@ -100,9 +100,9 @@ int main(int argc, char **argv) {
 
   graph.traceFaces();
 
-  graph.traceShortRows();
+  //graph.traceShortRows();
 
-  graph.writeLineElementObj();
+  //graph.writeLineElementObj();
 
   //for rendering figures
   //has to go before the show() call

@@ -83,6 +83,8 @@ void KnitGraph::renderGraph(){
     graphReal -> setRadius(0.001);
     graphReal -> setEnabled(true);
 
+    polyscope::registerPointCloud("knit graph nodes", embeddedVertices);
+
     std::vector<Vector3> dups;
     int numDuplicate = 0;
     for (int i = 0; i < edges.size(); i++){
@@ -112,112 +114,21 @@ void KnitGraph::traceFaces(){
         vPair2He[std::make_pair(he->tail, he->tip)] = he;
     }
 
-    //now trace the faces 
-    for (auto &he : halfedges){
-        if (he->isVisited) continue;//skip halfedges we've already visited
-        //need to come up with a way to trace bottom coure, wale, top course, wale
-        std::vector<size_t> currFace;
-        KnitGraphHalfedge * currHe = he;
-        currHe -> isVisited = true;
-        int startVertex = currHe->tail;
-        do{
-            currFace.push_back(currHe->tail);
-            if (currHe -> isRowOut){
-                if (vertices[currHe->tip].col_in[0] != -1){//we're not at the bottom most row
-                    //go to the next wale in
-                    currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_in[0])];
-                    currHe -> isVisited = true;
-                    if (currHe -> tail == startVertex) break;
-                    else{
-                        continue;
-                    }
-                }
-            }
-            if (currHe -> isRowIn){
-                if (vertices[currHe->tip].col_out[0] != -1){//we're not at the top most row
-                    if (vertices[currHe->tip].col_out[1] != -1){//we want to go to the second wale out (some extra work for row ins)
-                        currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_out[1])];
-                        currHe -> isVisited = true;
-                        if (currHe -> tail == startVertex) break;
-                        else{
-                            continue;
-                        }
-                    }
-                    else{
-                        //go to the first wale out
-                        currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_out[0])];
-                        currHe -> isVisited = true;
-                        if (currHe -> tail == startVertex) break;
-                        else{
-                            continue;
-                        }
-                    }
-                    
-                }
-            }
-            if (currHe -> isWaleIn){
-                if ((vertices[currHe->tip].col_out[1] != -1) && (currHe -> tail == vertices[currHe->tip].col_out[1])){//maybe a bit redundant but okay
-                    //go to the first wale out 
-                    currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_out[0])];
-                    currHe -> isVisited = true;
-                    if (currHe -> tail == startVertex) break;
-                    else{
-                        continue;
-                    }
-                }
-                else if (vertices[currHe->tip].row_in != -1){//we're not at a short row 
-                    //go to the next row in 
-                    currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].row_in)];
-                    currHe -> isVisited = true;
-                    if (currHe -> tail == startVertex) break;
-                    else{
-                        continue;
-                    }
-                }
-                else{
-                    //hit a short row, take the next wale in 
-                    currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_in[0])];
-                    currHe -> isVisited = true;
-                    if (currHe -> tail == startVertex) break;
-                    else{
-                        continue;
-                    }
-                }
-            }
-            if (currHe -> isWaleOut){
-                if ((vertices[currHe->tip].col_in[1] != -1) && (currHe -> tail == vertices[currHe->tip].col_in[0])){//maybe a bit redundant but okay
-                    //go to second wale in 
-                    currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_in[1])];
-                    currHe -> isVisited = true;
-                    if (currHe -> tail == startVertex) break;
-                    else{
-                        continue;
-                    }
-                }
-                else if (vertices[currHe->tip].row_out != -1){//we're not at a short row
-                    //go to the next row out
-                    currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].row_out)];
-                    currHe -> isVisited = true;
-                    if (currHe -> tail == startVertex) break;
-                    else{
-                        continue;
-                    }
-                }
-                else{
-                    //hit a short row, take the next wale out 
-                    currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_out[0])];
-                    currHe -> isVisited = true;
-                    if (currHe -> tail == startVertex) break;
-                    else{
-                        continue;
-                    }
-                }
-            }
-        }while(currHe -> tail != startVertex);
-        if (currFace.size() > 1)
-            faces.push_back(currFace);
-    }
-
+    // for (auto &he : halfedges){
+    //     if (he -> isRowOut){
+    //         std::cout << "row out he from " << he->tail << " to " << he->tip << std::endl;
+    //     }
+    //     if (he -> isRowIn){
+    //         std::cout << "row in he from " << he->tail << " to " << he->tip << std::endl;
+    //     }
+    //     if (he -> isWaleOut){
+    //         std::cout << "wale out he from " << he->tail << " to " << he->tip << std::endl;
+    //     }
+    //     if (he -> isWaleIn){
+    //         std::cout << "wale in he from " << he->tail << " to " << he->tip << std::endl;
+    //     }
+    // }
+   
     //now trace the faces 
     // for (auto &he : halfedges){
     //     if (he->isVisited) continue;//skip halfedges we've already visited
@@ -226,27 +137,9 @@ void KnitGraph::traceFaces(){
     //     KnitGraphHalfedge * currHe = he;
     //     currHe -> isVisited = true;
     //     int startVertex = currHe->tail;
-    //     std::cout << "start vertex = " << startVertex << std::endl;
     //     do{
-    //         std::cout << "curr vertex = " << currHe->tail << std::endl;
     //         currFace.push_back(currHe->tail);
-    //         if (currFace.size() > 5){
-    //             std::cout << "Traced " << faces.size() << " faces " << std::endl;
-    //             std::cout << "Something went wrong on this face " << std::endl;
-    //             exit(1);
-    //         }
     //         if (currHe -> isRowOut){
-    //             if (vertices[currHe->tip].col_out[0] != -1){//we're not at the top most row
-    //                 //go to the next wale out
-    //                 currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_out[0])];
-    //                 currHe -> isVisited = true;
-    //                 if (currHe -> tail == startVertex) break;
-    //                 else{
-    //                     continue;
-    //                 }
-    //             }
-    //         }
-    //         if (currHe -> isRowIn){
     //             if (vertices[currHe->tip].col_in[0] != -1){//we're not at the bottom most row
     //                 //go to the next wale in
     //                 currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_in[0])];
@@ -255,12 +148,43 @@ void KnitGraph::traceFaces(){
     //                 else{
     //                     continue;
     //                 }
-    //             }     
+    //             }
+    //         }
+    //         if (currHe -> isRowIn){
+    //             if (vertices[currHe->tip].col_out[0] != -1){//we're not at the top most row
+    //                 if (vertices[currHe->tip].col_out[1] != -1){//we want to go to the second wale out (some extra work for row ins)
+    //                     currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_out[1])];
+    //                     currHe -> isVisited = true;
+    //                     if (currHe -> tail == startVertex) break;
+    //                     else{
+    //                         continue;
+    //                     }
+    //                 }
+    //                 else{
+    //                     //go to the first wale out
+    //                     currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_out[0])];
+    //                     currHe -> isVisited = true;
+    //                     if (currHe -> tail == startVertex) break;
+    //                     else{
+    //                         continue;
+    //                     }
+    //                 }
+                    
+    //             }
     //         }
     //         if (currHe -> isWaleIn){
-    //             if (vertices[currHe->tip].row_out != -1){//we're not at a short row 
-    //                 //go to the next row out
-    //                 currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].row_out)];
+    //             if ((vertices[currHe->tip].col_out[1] != -1) && (currHe -> tail == vertices[currHe->tip].col_out[1])){//maybe a bit redundant but okay
+    //                 //go to the first wale out 
+    //                 currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_out[0])];
+    //                 currHe -> isVisited = true;
+    //                 if (currHe -> tail == startVertex) break;
+    //                 else{
+    //                     continue;
+    //                 }
+    //             }
+    //             else if (vertices[currHe->tip].row_in != -1){//we're not at a short row 
+    //                 //go to the next row in 
+    //                 currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].row_in)];
     //                 currHe -> isVisited = true;
     //                 if (currHe -> tail == startVertex) break;
     //                 else{
@@ -278,9 +202,18 @@ void KnitGraph::traceFaces(){
     //             }
     //         }
     //         if (currHe -> isWaleOut){
-    //             if (vertices[currHe->tip].row_in != -1){//we're not at a short row
-    //                 //go to the next row in
-    //                 currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].row_in)];
+    //             if ((vertices[currHe->tip].col_in[1] != -1) && (currHe -> tail == vertices[currHe->tip].col_in[0])){//maybe a bit redundant but okay
+    //                 //go to second wale in 
+    //                 currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_in[1])];
+    //                 currHe -> isVisited = true;
+    //                 if (currHe -> tail == startVertex) break;
+    //                 else{
+    //                     continue;
+    //                 }
+    //             }
+    //             else if (vertices[currHe->tip].row_out != -1){//we're not at a short row
+    //                 //go to the next row out
+    //                 currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].row_out)];
     //                 currHe -> isVisited = true;
     //                 if (currHe -> tail == startVertex) break;
     //                 else{
@@ -301,6 +234,121 @@ void KnitGraph::traceFaces(){
     //     if (currFace.size() > 1)
     //         faces.push_back(currFace);
     // }
+
+    //now trace the faces in the disk setting 
+    for (auto &he : halfedges){
+        if (he->isVisited) continue;//skip halfedges we've already visited
+        //need to come up with a way to trace bottom coure, wale, top course, wale
+        std::vector<size_t> currFace;
+        KnitGraphHalfedge * currHe = he;
+        currHe -> isVisited = true;
+        currHe -> twin -> isVisited = true;
+        int startVertex = currHe->tail;
+        std::vector<Vector3> tracedPoints;
+        std::cout << "Size of faces traced = " << faces.size() << std::endl;
+        std::cout << "start vertex = " << startVertex << std::endl;
+        if (he -> isRowOut){
+            do{
+                std::cout << "curr vertex = " << currHe->tail << std::endl;
+                currFace.push_back(currHe->tail);
+                tracedPoints.emplace_back(vertices[currHe->tail].position);
+                // if (faces.size() == 403){
+                //     polyscope::registerPointCloud("Traced Points", tracedPoints);
+                //     polyscope::show();
+                // }
+                if (currHe -> isRowOut){
+                    std::cout << "In row out he " << std::endl;
+                    if (vertices[currHe->tip].col_out[0] != -1){//we're not at the top most row
+                        //go to the next wale out
+                        currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_out[0])];
+                        currHe -> isVisited = true;
+                        //currHe -> twin -> isVisited = true;
+                        if (currHe -> tail == startVertex) break;
+                        else{
+                            continue;
+                        }
+                    }
+                }
+                if (currHe -> isRowIn){
+                    std::cout << "In row in he " << std::endl;
+                    if (vertices[currHe->tip].col_in[0] != -1){//we're not at the bottom most row
+                        //go to the next wale in
+                        currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_in[0])];
+                        currHe -> isVisited = true;
+                        //currHe -> twin -> isVisited = true;
+                        if (currHe -> tail == startVertex) break;
+                        else{
+                            continue;
+                        }
+                    }     
+                }
+                if (currHe -> isWaleIn){
+                    std::cout << "In wale in he " << std::endl;
+                    if (vertices[currHe->tip].row_out != -1){//we're not at a short row 
+                        //go to the next row out
+                        currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].row_out)];
+                        currHe -> isVisited = true;
+                        //currHe -> twin -> isVisited = true;
+                        if (currHe -> tail == startVertex) break;
+                        else{
+                            continue;
+                        }
+                    }
+                    else{
+                        //if the next wale in exists, take it, otherwise break
+                        if (vertices[currHe->tip].col_in[0] != -1){
+                            //hit a short row, take the next wale in 
+                            currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_in[0])];
+                            currHe -> isVisited = true;
+                            //currHe -> twin -> isVisited = true;
+                            if (currHe -> tail == startVertex) break;
+                            else{
+                                continue;
+                            }
+                        }
+                        else{
+                            break;
+                        }
+                        if (currHe -> tail == startVertex) break;
+                        else{
+                            continue;;
+                        }
+                    }
+                }
+                if (currHe -> isWaleOut){
+                    std::cout << "In wale out he " << std::endl;
+                    if (vertices[currHe->tip].row_in != -1){//we're not at a short row
+                        //go to the next row in
+                        currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].row_in)];
+                        currHe -> isVisited = true;
+                        //currHe -> twin -> isVisited = true;
+                        if (currHe -> tail == startVertex) break;
+                        else{
+                            continue;
+                        }
+                    }
+                    else{
+                        //if the next wale out exists, take it, otherwise break
+                        if (vertices[currHe->tip].col_out[0] != -1){
+                            //hit a short row, take the next wale out 
+                            currHe = vPair2He[std::make_pair(currHe->tip, vertices[currHe->tip].col_out[0])];
+                            currHe -> isVisited = true;
+                            //currHe -> twin -> isVisited = true;
+                        }
+                        else{
+                            break;
+                        }
+                        if (currHe -> tail == startVertex) break;
+                        else{
+                            continue;
+                        }
+                    }
+                }
+            }while(currHe -> tail != startVertex);
+            if (currFace.size() > 3)
+                faces.push_back(currFace);
+        }
+    }
     
     Eigen::MatrixXd primalVertexPositions(vertices.size(), 3);
     for (const auto& v : vertices){
@@ -399,34 +447,49 @@ void KnitGraph::traceFaces(){
         }
     }
 
-    std::cout << "Got here 3 " << std::endl;
-    SurfaceMesh * dualMesh = new SurfaceMesh(dualFaces);
-    VertexPositionGeometry * dualGeometry = new VertexPositionGeometry(*dualMesh, dualVertexPositions);
-    std::cout << "Got here 4 " << std::endl;
+    // std::cout << "Got here 3 " << std::endl;
+    // SurfaceMesh * dualMesh = new SurfaceMesh(dualFaces);
+    // VertexPositionGeometry * dualGeometry = new VertexPositionGeometry(*dualMesh, dualVertexPositions);
+    // std::cout << "Got here 4 " << std::endl;
 
-    // std::cout << "number of faces in the dual mesh " << dualMesh -> nFaces() << std::endl;
-    // std::cout << "size of edge labels = " << edgeLabels.size() << std::endl;
-    polyscope::registerSurfaceMesh("dual mesh", dualGeometry->inputVertexPositions, dualMesh->getFaceVertexList());
+    // // std::cout << "number of faces in the dual mesh " << dualMesh -> nFaces() << std::endl;
+    // // std::cout << "size of edge labels = " << edgeLabels.size() << std::endl;
+    // polyscope::registerSurfaceMesh("dual mesh", dualGeometry->inputVertexPositions, dualMesh->getFaceVertexList());
 
-    std::ofstream outfile("stitchMesh.obj");
-    for (const auto &v : dualMesh->vertices()){
-        Vector3 p = dualGeometry->vertexPositions[v];
+    // std::ofstream outfile("stitchMesh.obj");
+    // for (const auto &v : dualMesh->vertices()){
+    //     Vector3 p = dualGeometry->vertexPositions[v];
+    //     outfile << "v " << p.x << " " << p.y << " " << p.z << std::endl;
+    // }
+    // for (auto &f : dualFaces){
+    //     outfile << "f ";
+    //     for (auto &v : f){
+    //         outfile << v + 1 << " ";
+    //     }
+    //     outfile << "\n";
+    // }
+    // for (auto &e : edgeLabels){
+    //     outfile << "e ";
+    //     for (auto &l : e){
+    //         outfile << l << " ";
+    //     }
+    //     outfile << "\n";
+    // } 
+
+    // outfile.close(); 
+
+    std::ofstream outfile("primalMesh.obj");
+    for (const auto &v : primalMesh->vertices()){
+        Vector3 p = primalGeometry->vertexPositions[v];
         outfile << "v " << p.x << " " << p.y << " " << p.z << std::endl;
     }
-    for (auto &f : dualFaces){
+    for (auto &f : faces){
         outfile << "f ";
         for (auto &v : f){
             outfile << v + 1 << " ";
         }
         outfile << "\n";
     }
-    for (auto &e : edgeLabels){
-        outfile << "e ";
-        for (auto &l : e){
-            outfile << l << " ";
-        }
-        outfile << "\n";
-    } 
 
     outfile.close(); 
 
