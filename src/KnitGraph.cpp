@@ -522,26 +522,185 @@ void KnitGraph::traceFaces(){
         auto primalPSMesh = polyscope::registerSurfaceMesh("primal mesh", compactPositions, compactFaces);
         FaceData<int> primalMeshFaceLabels(*primalMesh, 0);
 
+        // ------------------------------------------------------------
+        // Build row/col chains on the ORIGINAL vertex set (by id)
+        // ------------------------------------------------------------
+        auto collectRowsLocal = [&](const std::vector<knitGraphVertex>& V) {
+            std::vector<Chain> rows;
+            std::vector<char> seen(V.size(), false);
+
+            for (const auto& v : V) {
+                if (v.row_in == -1 && v.row_out != -1) { // row start
+                    Chain row;
+                    row.start = v.id;
+
+                    int cur = v.id;
+                    std::unordered_set<int> guard;
+                    while (cur != -1 && cur < (int)V.size() && !seen[cur]) {
+                        if (guard.count(cur)) break;
+                        guard.insert(cur);
+
+                        seen[cur] = true;
+                        row.verts.push_back(cur);
+
+                        int nxt = V[cur].row_out;
+                        cur = (nxt != -1 ? nxt : -1);
+                    }
+
+                if (!row.verts.empty()) rows.push_back(std::move(row));
+            }
+        }
+            return rows;
+        };
+
+        auto collectColsLocal = [&](const std::vector<knitGraphVertex>& V) {
+            std::vector<Chain> cols;
+            std::vector<char> seen(V.size(), false);
+
+            for (const auto& v : V) {
+                if (v.col_in[0] == -1 && v.col_out[0] != -1) { // col start
+                    Chain col;
+                    col.start = v.id;
+
+                    int cur = v.id;
+                    std::unordered_set<int> guard;
+                    while (cur != -1 && cur < (int)V.size() && !seen[cur]) {
+                        if (guard.count(cur)) break;
+                        guard.insert(cur);
+
+                        seen[cur] = true;
+                        col.verts.push_back(cur);
+
+                        int nxt = V[cur].col_out[0];
+                        cur = (nxt != -1 ? nxt : -1);
+                    }
+
+                    if (!col.verts.empty()) cols.push_back(std::move(col));
+                }
+            }
+            return cols;
+        };
+
+        auto buildV2Chain = [&](int nVerts, const std::vector<Chain>& chains) {
+            std::vector<int> v2c(nVerts, -1);
+            for (int cid = 0; cid < (int)chains.size(); ++cid) {
+                for (int v : chains[cid].verts) {
+                    if (v >= 0 && v < nVerts) v2c[v] = cid;
+                }
+            }
+            return v2c;
+        };
+
+        auto topoSortLocal = [&](const DAG& g) {
+            std::queue<int> q;
+            std::vector<int> indeg = g.indeg;
+
+            for (int i = 0; i < g.n; ++i) if (indeg[i] == 0) q.push(i);
+
+            std::vector<int> order;
+            order.reserve(g.n);
+
+            while (!q.empty()) {
+                int u = q.front(); q.pop();
+                order.push_back(u);
+                for (int v : g.adj[u]) {
+                    if (--indeg[v] == 0) q.push(v);
+                }
+            }
+
+            if ((int)order.size() != g.n) {
+                // If you ever hit this, your "DAG" has a cycle. Fall back to identity.
+                std::cerr << "WARNING: topo sort failed (cycle). Using identity order.\n";
+                order.clear();
+                for (int i = 0; i < g.n; ++i) order.push_back(i);
+            }
+            return order;
+        };
+
+        auto buildTopoRankLocal = [&](const std::vector<int>& order, int N) {
+            std::vector<int> rank(N, -1);
+            for (int i = 0; i < N; ++i) rank[order[i]] = i;
+            return rank;
+        };
+
+        // ------------------------------------------------------------
+        // 1) Collect chains on the ORIGINAL knit graph
+        // ------------------------------------------------------------
+        auto rows = collectRowsLocal(vertices);
+        auto cols = collectColsLocal(vertices);
+
+        std::cout << "Row chains: " << rows.size() << "\n";
+        std::cout << "Col chains: " << cols.size() << "\n";
+
+        // ------------------------------------------------------------
+        // 2) Build vertex->rowNode / vertex->colNode maps
+        // ------------------------------------------------------------
+        auto v2row = buildV2Chain((int)vertices.size(), rows);
+        auto v2col = buildV2Chain((int)vertices.size(), cols);
+
+        // ------------------------------------------------------------
+        // 3) Build row DAG (edges induced by col_out[0]) and col DAG (edges induced by row_out)
+        // ------------------------------------------------------------
+        DAG rowDAG = buildRowDAG(vertices, rows, v2row);
+        DAG colDAG = buildColDAG(vertices, cols, v2col);
+
+        // ------------------------------------------------------------
+        // 4) Topo sort both
+        // ------------------------------------------------------------
+        auto rowOrder = topoSortLocal(rowDAG);
+        auto colOrder = topoSortLocal(colDAG);
+
+        auto rowTopoRank = buildTopoRankLocal(rowOrder, rowDAG.n); // u = topo rank(row node)
+        auto colTopoRank = buildTopoRankLocal(colOrder, colDAG.n); // v = topo rank(col node)
+
+        // ------------------------------------------------------------
+        // 5) Write OBJ with vt lines (integer u,v). IMPORTANT: write vt before faces.
+        // ------------------------------------------------------------
         std::ofstream outfile("primalMesh.obj");
 
-        // ------------------ vertices ------------------
+        // vertices
         for (int i = 0; i < compactPositions.rows(); ++i) {
             outfile << "v "
                 << compactPositions(i,0) << " "
                 << compactPositions(i,1) << " "
                 << compactPositions(i,2) << "\n";
-            }
+        }
 
-        // ------------------ faces ------------------
+        std::vector<double> uvec;
+        std::vector<double> vvec;
+        // texture coords (one per compact vertex; OBJ indexing matches vertex indexing)
+        for (size_t cv = 0; cv < newToOld.size(); ++cv) {
+            int oldV = (int)newToOld[cv];
+
+            int rNode = (oldV >= 0 && oldV < (int)v2row.size()) ? v2row[oldV] : -1;
+            int cNode = (oldV >= 0 && oldV < (int)v2col.size()) ? v2col[oldV] : -1;
+
+            int u = (rNode >= 0 && rNode < (int)rowTopoRank.size()) ? rowTopoRank[rNode] : 0;
+            int v = (cNode >= 0 && cNode < (int)colTopoRank.size()) ? colTopoRank[cNode] : 0;
+
+        
+            uvec.emplace_back(u);
+            vvec.emplace_back(v);
+
+            outfile << "vt " << u << " " << v << "\n";
+        }
+
+        // faces (use v/vt; vt index == vertex index)
         for (const auto& f : compactFaces) {
-            outfile << "f ";
-            for (size_t v : f) {
-            // OBJ is 1-indexed, and we want v/vt
-            outfile << (v + 1) << "/" << (v + 1) << " ";
+            outfile << "f";
+            for (size_t vid : f) {
+                size_t idx = vid + 1; // OBJ is 1-indexed
+                outfile << " " << idx << "/" << idx;
             }
             outfile << "\n";
         }
+
         outfile.close();
+
+        primalPSMesh->addVertexScalarQuantity("U", uvec);
+        primalPSMesh->addVertexScalarQuantity("V", vvec);
+
+        std::cout << "Wrote primalMesh.obj with integer UVs (vt u v)\n";
     }
 
 }
@@ -591,85 +750,6 @@ void KnitGraph::writeLineElementObj(){
 //---------------------------------------------//
 // Implementing DAG for integer UV coordinates
 //---------------------------------------------//
-
-//Collect rows
-std::vector<Chain> collectRows(const std::vector<knitGraphVertex>& vertices) {
-    std::vector<Chain> rows;
-    std::vector<char> seen(vertices.size(), false);
-
-    for (const auto& v : vertices) {
-        if (v.row_in == -1 && v.row_out != -1) {          // row start
-        Chain row;
-        row.start = v.id;
-
-        int cur = v.id;
-        std::unordered_set<int> guard;            
-        while (cur != -1 && !seen[cur]) {
-            if (guard.count(cur)) break;
-            guard.insert(cur);
-
-            seen[cur] = true;
-            row.verts.push_back(cur);
-
-            int nxt = vertices[cur].row_out;
-            cur = (nxt != -1 ? nxt : -1);
-        }
-
-        // only keep nontrivial rows
-        if (!row.verts.empty()) rows.push_back(std::move(row));
-        }
-    }
-
-    std::cout << "Number of row chains " << rows.size() << std::endl;
-    return rows;
-}
-
-//Collect columns 
-std::vector<Chain> collectCols(const std::vector<knitGraphVertex>& vertices) {
-  
-    std::vector<Chain> cols;
-    std::vector<char> seen(vertices.size(), false);
-
-    for (const auto& v : vertices) {
-        if (v.col_in[0] == -1 && v.col_out[0] != -1) {    // col start
-        Chain col;
-        col.start = v.id;
-
-        int cur = v.id;
-        std::unordered_set<int> guard;
-        while (cur != -1 && !seen[cur]) {
-            if (guard.count(cur)) break;
-            guard.insert(cur);
-
-            seen[cur] = true;
-            col.verts.push_back(cur);
-
-            int nxt = vertices[cur].col_out[0];
-            cur = (nxt != -1 ? nxt : -1);
-        }
-
-        if (!col.verts.empty()) cols.push_back(std::move(col));
-        }
-    }
-
-    std::cout << "Number of col chains " << cols.size() << std::endl;
-    return cols;
-}
-
-// Build vertex->chainId map from chains (rows or cols)
-std::vector<int> buildVertexToChainMap(
-    int nVerts,
-    const std::vector<Chain>& chains
-) {
-  std::vector<int> v2c(nVerts, -1);
-  for (int cid = 0; cid < (int)chains.size(); ++cid) {
-    for (int v : chains[cid].verts) {
-      if (v < 0 || v >= nVerts) continue;
-      v2c[v] = cid;
-    }
-  }
-  return v2c;
-}
 
 // Row DAG edges: use wale links v -> col_out[0]
 DAG buildRowDAG(const std::vector<knitGraphVertex>& vertices,
@@ -739,27 +819,4 @@ DAG buildColDAG(const std::vector<knitGraphVertex>& vertices,
   }
 
   return g;
-}
-
-//Kahn topo sort (will throw if cycle)
-std::vector<int> topoSort(const DAG& g) {
-  std::queue<int> q;
-  std::vector<int> indeg = g.indeg;
-  for (int i = 0; i < g.n; ++i) if (indeg[i] == 0) q.push(i);
-
-  std::vector<int> order;
-  order.reserve(g.n);
-
-  while (!q.empty()) {
-    int u = q.front(); q.pop();
-    order.push_back(u);
-    for (int v : g.adj[u]) {
-      if (--indeg[v] == 0) q.push(v);
-    }
-  }
-
-  if ((int)order.size() != g.n) {
-    throw std::runtime_error("DAG topoSort failed: cycle detected (or missing nodes).");
-  }
-  return order;
 }
