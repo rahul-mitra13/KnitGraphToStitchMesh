@@ -98,7 +98,6 @@ void KnitGraph::renderGraph(){
             }
         }
     }
-
 }
 
 void KnitGraph::traceFaces(){
@@ -524,19 +523,25 @@ void KnitGraph::traceFaces(){
         FaceData<int> primalMeshFaceLabels(*primalMesh, 0);
 
         std::ofstream outfile("primalMesh.obj");
-        for (const auto &v : primalMesh->vertices()){
-            Vector3 p = primalGeometry->vertexPositions[v];
-            outfile << "v " << p.x << " " << p.y << " " << p.z << std::endl;
-        }
-        for (auto &f : compactFaces){
+
+        // ------------------ vertices ------------------
+        for (int i = 0; i < compactPositions.rows(); ++i) {
+            outfile << "v "
+                << compactPositions(i,0) << " "
+                << compactPositions(i,1) << " "
+                << compactPositions(i,2) << "\n";
+            }
+
+        // ------------------ faces ------------------
+        for (const auto& f : compactFaces) {
             outfile << "f ";
-            for (auto &v : f){
-                outfile << v + 1 << " ";
+            for (size_t v : f) {
+            // OBJ is 1-indexed, and we want v/vt
+            outfile << (v + 1) << "/" << (v + 1) << " ";
             }
             outfile << "\n";
         }
-
-        outfile.close(); 
+        outfile.close();
     }
 
 }

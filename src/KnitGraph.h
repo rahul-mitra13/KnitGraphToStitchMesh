@@ -27,6 +27,7 @@ struct knitGraphVertex{
     int row_out = -1;
     int col_in[2] = {-1, -1};
     int col_out[2] = {-1, -1};
+
 };
 
 struct KnitGraphHalfedge{
@@ -59,7 +60,7 @@ struct KnitGraphEdge{
 struct KnitGraph{
 
     bool isDisk = true;
-
+    
     std::vector<knitGraphVertex> vertices;
     std::vector<KnitGraphHalfedge*> halfedges;
 
