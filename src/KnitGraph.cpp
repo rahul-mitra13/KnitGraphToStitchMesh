@@ -587,3 +587,179 @@ void KnitGraph::writeLineElementObj(){
     outfile.close();
 
 }
+
+//---------------------------------------------//
+// Implementing DAG for integer UV coordinates
+//---------------------------------------------//
+
+//Collect rows
+std::vector<Chain> collectRows(const std::vector<knitGraphVertex>& vertices) {
+    std::vector<Chain> rows;
+    std::vector<char> seen(vertices.size(), false);
+
+    for (const auto& v : vertices) {
+        if (v.row_in == -1 && v.row_out != -1) {          // row start
+        Chain row;
+        row.start = v.id;
+
+        int cur = v.id;
+        std::unordered_set<int> guard;            
+        while (cur != -1 && !seen[cur]) {
+            if (guard.count(cur)) break;
+            guard.insert(cur);
+
+            seen[cur] = true;
+            row.verts.push_back(cur);
+
+            int nxt = vertices[cur].row_out;
+            cur = (nxt != -1 ? nxt : -1);
+        }
+
+        // only keep nontrivial rows
+        if (!row.verts.empty()) rows.push_back(std::move(row));
+        }
+    }
+
+    std::cout << "Number of row chains " << rows.size() << std::endl;
+    return rows;
+}
+
+//Collect columns 
+std::vector<Chain> collectCols(const std::vector<knitGraphVertex>& vertices) {
+  
+    std::vector<Chain> cols;
+    std::vector<char> seen(vertices.size(), false);
+
+    for (const auto& v : vertices) {
+        if (v.col_in[0] == -1 && v.col_out[0] != -1) {    // col start
+        Chain col;
+        col.start = v.id;
+
+        int cur = v.id;
+        std::unordered_set<int> guard;
+        while (cur != -1 && !seen[cur]) {
+            if (guard.count(cur)) break;
+            guard.insert(cur);
+
+            seen[cur] = true;
+            col.verts.push_back(cur);
+
+            int nxt = vertices[cur].col_out[0];
+            cur = (nxt != -1 ? nxt : -1);
+        }
+
+        if (!col.verts.empty()) cols.push_back(std::move(col));
+        }
+    }
+
+    std::cout << "Number of col chains " << cols.size() << std::endl;
+    return cols;
+}
+
+// Build vertex->chainId map from chains (rows or cols)
+std::vector<int> buildVertexToChainMap(
+    int nVerts,
+    const std::vector<Chain>& chains
+) {
+  std::vector<int> v2c(nVerts, -1);
+  for (int cid = 0; cid < (int)chains.size(); ++cid) {
+    for (int v : chains[cid].verts) {
+      if (v < 0 || v >= nVerts) continue;
+      v2c[v] = cid;
+    }
+  }
+  return v2c;
+}
+
+// Row DAG edges: use wale links v -> col_out[0]
+DAG buildRowDAG(const std::vector<knitGraphVertex>& vertices,
+                const std::vector<Chain>& rows,
+                const std::vector<int>& v2row) {
+
+  DAG g;
+  g.n = (int)rows.size();
+  g.adj.assign(g.n, {});
+  g.indeg.assign(g.n, 0);
+
+  std::unordered_set<std::pair<int,int>, PairHash> seen;
+
+  for (int v = 0; v < (int)vertices.size(); ++v) {
+    int r0 = v2row[v];
+    if (r0 < 0) continue;
+
+    int w = vertices[v].col_out[0];
+    if (w == -1) continue;
+
+    if (w < 0 || w >= (int)vertices.size()) continue;
+    int r1 = v2row[w];
+    if (r1 < 0) continue;
+
+    if (r0 == r1) continue; // ignore self
+
+    std::pair<int,int> e{r0, r1};
+    if (seen.insert(e).second) {
+      g.adj[r0].push_back(r1);
+      g.indeg[r1] += 1;
+    }
+  }
+
+  return g;
+}
+
+// Column DAG edges: use course links v -> row_out
+DAG buildColDAG(const std::vector<knitGraphVertex>& vertices,
+                const std::vector<Chain>& cols,
+                const std::vector<int>& v2col) {
+
+  DAG g;
+  g.n = (int)cols.size();
+  g.adj.assign(g.n, {});
+  g.indeg.assign(g.n, 0);
+
+  std::unordered_set<std::pair<int,int>, PairHash> seen;
+
+  for (int v = 0; v < (int)vertices.size(); ++v) {
+    int c0 = v2col[v];
+    if (c0 < 0) continue;
+
+    int u = vertices[v].row_out;
+    if (u == -1) continue;
+
+    if (u < 0 || u >= (int)vertices.size()) continue;
+    int c1 = v2col[u];
+    if (c1 < 0) continue;
+
+    if (c0 == c1) continue;
+
+    std::pair<int,int> e{c0, c1};
+    if (seen.insert(e).second) {
+      g.adj[c0].push_back(c1);
+      g.indeg[c1] += 1;
+    }
+  }
+
+  return g;
+}
+
+//Kahn topo sort (will throw if cycle)
+std::vector<int> topoSort(const DAG& g) {
+  std::queue<int> q;
+  std::vector<int> indeg = g.indeg;
+  for (int i = 0; i < g.n; ++i) if (indeg[i] == 0) q.push(i);
+
+  std::vector<int> order;
+  order.reserve(g.n);
+
+  while (!q.empty()) {
+    int u = q.front(); q.pop();
+    order.push_back(u);
+    for (int v : g.adj[u]) {
+      if (--indeg[v] == 0) q.push(v);
+    }
+  }
+
+  if ((int)order.size() != g.n) {
+    throw std::runtime_error("DAG topoSort failed: cycle detected (or missing nodes).");
+  }
+  return order;
+}
