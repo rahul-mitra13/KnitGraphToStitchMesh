@@ -241,15 +241,19 @@ void KnitGraph::traceFaces(){
         auto primalPSMesh = polyscope::registerSurfaceMesh("primal mesh", primalVertexPositions, faces);
         FaceData<int> primalMeshFaceLabels(*primalMesh, 0);
 
-        // for (Face f : primalMesh -> faces()){
-        //     int ctr = 0;
-        //     for (Halfedge he : f.adjacentHalfedges()){
-        //         ctr++;
-        //     }
-        //     if (ctr == 5) primalMeshFaceLabels[f] = -1.0;
-        //     else if (ctr == 3) primalMeshFaceLabels[f] = 1.0;
-        // }
-        // primalPSMesh->addFaceScalarQuantity("face labels", primalMeshFaceLabels);
+        std::ofstream out("cactus_primal.obj");
+        for (const auto &v : primalMesh->vertices()){
+            Vector3 p = primalGeometry->vertexPositions[v];
+            out << "v " << p.x << " " << p.y << " " << p.z << std::endl;
+        }
+        for (auto &f : faces){
+            out << "f ";
+            for (auto &v : f){
+                out << v + 1 << " ";
+            }
+            out << "\n";
+        }
+        out.close(); 
 
     
         Eigen::MatrixXd dualVertexPositions(primalMesh->nFaces(), 3);

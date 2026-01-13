@@ -63,7 +63,7 @@ struct KnitGraphEdge{
 
 struct KnitGraph{
 
-    bool isDisk = true;
+    bool isDisk = false;
     
     std::vector<knitGraphVertex> vertices;
     std::vector<KnitGraphHalfedge*> halfedges;
