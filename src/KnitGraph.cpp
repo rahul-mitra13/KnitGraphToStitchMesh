@@ -241,7 +241,7 @@ void KnitGraph::traceFaces(){
         auto primalPSMesh = polyscope::registerSurfaceMesh("primal mesh", primalVertexPositions, faces);
         FaceData<int> primalMeshFaceLabels(*primalMesh, 0);
 
-        std::ofstream out("cactus_primal.obj");
+        std::ofstream out("primal.obj");
         for (const auto &v : primalMesh->vertices()){
             Vector3 p = primalGeometry->vertexPositions[v];
             out << "v " << p.x << " " << p.y << " " << p.z << std::endl;
